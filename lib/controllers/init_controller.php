@@ -41,6 +41,7 @@ class MpmInitController extends MpmController
 		$port = '';
 		$db_path = '';
 		$method = 0;
+        $engine='InnoDB';
 
 		$clw = MpmCommandLineWriter::getInstance();
 		$clw->writeHeader();
@@ -110,6 +111,37 @@ class MpmInitController extends MpmController
 			    $method = $db_config->method;
 			}
 		} while ($method < MPM_METHOD_PDO || $method > MPM_METHOD_MYSQLI || $method == 0);
+
+
+
+        # choice engine
+
+		do
+		{
+			echo "\nWhich engine would you like to use to \nthe database?  ".MPM_ENGINE_INNODB."=INNODB or ".MPM_ENGINE_NDBCLUSTER."=ndbcluster(mysql cluster)";
+			if (isset($db_config))
+			{
+			    echo " [" . $db_config->engine . "]";
+			}
+			echo ": ";
+			$engine = fgets(STDIN);
+			$engine = trim($engine);
+			if (!is_numeric($engine))
+			{
+			    $engine = 0;
+			}
+			if (empty($method) && isset($db_config))
+			{
+			    $engine = $db_config->engine;
+			}
+		} while ($engine < MPM_ENGINE_INNODB || $engine > MPM_ENGINE_NDBCLUSTER || $engine == 0);
+        
+        if ($engine == MPM_ENGINE_INNODB) {
+            $engine = 'innodb';
+        } else{
+            $engine = 'ndbcluster';
+        }
+
 
 		echo "\nEnter your MySQL database hostname or IP address [";
 		if (isset($db_config))
@@ -259,6 +291,7 @@ class MpmInitController extends MpmController
         $file .= '$db_config->db_path = ' . "'" . $db_path . "';" . "\n";
         $file .= '$db_config->method = ' . $method . ";" . "\n";
         $file .= '$db_config->migrations_table = ' . "'" . $migrations_table . "';" . "\n";
+        $file .= '$db_config->engine= '."'".$engine."';"."\n";
         $file .= "\n?>";
 
 		if (file_exists(MPM_PATH . '/config/db_config.php'))
@@ -291,7 +324,7 @@ class MpmInitController extends MpmController
 			{
 				echo "not found.\n";
 				echo "Creating migrations table... ";
-				$sql1 = "CREATE TABLE IF NOT EXISTS `{$migrations_table}` ( `id` INT(11) NOT NULL AUTO_INCREMENT, `timestamp` DATETIME NOT NULL, `active` TINYINT(1) NOT NULL DEFAULT 0, `is_current` TINYINT(1) NOT NULL DEFAULT 0, PRIMARY KEY ( `id` ) ) ENGINE=InnoDB";
+				$sql1 = "CREATE TABLE IF NOT EXISTS `{$migrations_table}` ( `id` INT(11) NOT NULL AUTO_INCREMENT, `timestamp` DATETIME NOT NULL, `active` TINYINT(1) NOT NULL DEFAULT 0, `is_current` TINYINT(1) NOT NULL DEFAULT 0, PRIMARY KEY ( `id` ) ) ENGINE={$engine}";
 				$sql2 = "CREATE UNIQUE INDEX `TIMESTAMP_INDEX` ON `{$migrations_table}` ( `timestamp` )";
 
 				if (MpmDbHelper::getMethod() == MPM_METHOD_PDO)

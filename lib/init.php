@@ -50,6 +50,19 @@ if (!defined('MPM_METHOD_MYSQLI'))
     define('MPM_METHOD_MYSQLI', 2);
 }
 
+if (!defined('MPM_ENGINE_INNODB')) {
+    /*
+     * Flag to use innode to store the table
+     */
+    define('MPM_ENGINE_INNODB',1);
+}
+
+if (!defined('MPM_ENGINE_NDBCLUSTER')) {
+    /*
+     * Flag to use ndbcluster to store the table
+     */
+    define('MPM_ENGINE_NDBCLUSTER',2);
+}
 if (!defined('STDIN'))
 {
     /**
